@@ -1,0 +1,47 @@
+---
+- name: Install Docker on CentOS 7
+  hosts: 192.168.1.99
+  become: yes
+  tasks:
+    
+    - name: Ensure prerequisites are installed
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+    
+    - name: Add Docker repository
+      yum_repository:
+        name: docker-ce
+        description: Docker CE Repository
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+        state: present
+    
+    - name: Install Docker
+      yum:
+        name: docker-ce
+        state: present
+    
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+    
+    - name: Add user to Docker group (optional, for non-root user to run Docker)
+      user:
+        name: jabin  # Replace with your user
+        groups: docker
+        append: yes
+
+    - name: Verify Docker installation
+      command: docker --version
+      register: docker_version
+
+    - name: Display Docker version
+      debug:
+        var: docker_version.stdout
